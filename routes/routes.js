@@ -1,39 +1,31 @@
+const bodyparser = require("body-parser");
 const express = require("express");
 const User = require("../db/User")
 const router = express.Router();
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const fileUpload = require('../images/savetodisk')
+const multer = require("multer")
 mongoose.connect("mongodb://localhost/sih", () => {
     console.log("connected")
 },
 e => console.log("error occured while connecting to mongodb: ", e.message))
 
-// router.use(uploadData)
-// this will parse json for us!
-router.use(express.json())
+router.use(bodyparser.json({extended:true}))
+router.use(bodyparser.urlencoded({ extended: true}))
 
-async function findData(){
-    let user;
-    await User.find({}, function(err, res){
-        if(err) throw err;
-        console.log("res is " + res)
-        user = res;
-    })
-    
-    return user
-}
 
 router.get('/all', (req, res) => {
-    // let data = findData()
+
     User.find({}, function(err, result){
         if(err) throw err;
         console.log("res is " + res)
         res.send(result)
     })
-    // console.log(data)
-    // res.status(200).send(data)
+    
 })
 
 router.get('/person/:mid', (req, res)=>{
+
     let mid = req.params.mid
     console.log("mid is ", mid)
     User.find({mid: mid}, function(err, result){
@@ -41,28 +33,33 @@ router.get('/person/:mid', (req, res)=>{
         console.log("result is " + result)
         res.status(200).send(result)
     })
+
 });
 
-router.post('/upload', (req, res) => {
-    console.log("post request hit")
-    let file = req.body
-    uploadData(file);
-    res.send({name: "Post request"})
-    
+router.post('/test', (req, res) => {
+
+    console.log(req.body.user);
+    console.log(req.body.workerImg);
+    res.send("ok")
+
 })
 
-function uploadData(file){
-    try{
-        let myUser = new User(file)
-        
-        myUser.save()
-        console.log("user saved! ", myUser)
+router.post('/upload', (req, res) => {
 
-    }catch(err){
-        console.log(`an error occurred while uploading data:  ${err.message}`)
-    }
-    // res.send({uploadStatus: "data saved successfully"})
-    // next();
-}
+    console.log("post request hit")
+    let file = req.body.data
+    console.log("data is "+file)
+    fileUpload(req, res, (err)=> {
+        if(err){
+            res.send(err);
+        }else if(req.file == undefined){
+            res.send("please select an image");
+        }else{
+            console.log("file upload success");
+            res.send("File uploaded successfully");
+        }
+    })
+
+})
 
 module.exports = router

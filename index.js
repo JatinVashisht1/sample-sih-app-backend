@@ -7,6 +7,8 @@ const port = 3000
 // specifying our middleware (router)
 app.use('/', route)
 
+app.use(express.urlencoded())
+
 // app.get('/', (req, res)=>{
 //     console.log("get request hit!");
 //     res.send({name: "Demo SIH App"})
